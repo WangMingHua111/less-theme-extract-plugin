@@ -75,7 +75,6 @@ function findModuleById(modules, id) {
 const pluginName = 'less-theme-extract-plugin';
 
 function pitch(request) {
-    console.log(request)
     const themes = this._compiler.themes || {}
     const options = _loaderUtils.default.getOptions(this) || {};
     // const loaders = this.loaders.slice(this.loaderIndex + 2);
