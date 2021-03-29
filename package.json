@@ -1,0 +1,27 @@
+{
+  "name": "less-theme-extract-plugin",
+  "version": "0.0.1",
+  "description": "less theme extract",
+  "main": "src/cjs.js",
+  "files": [
+    "src",
+    "package.json",
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WangMingHua111/less-theme-extract-plugin.git"
+  },
+  "keywords": [
+    "less",
+    "theme"
+  ],
+  "author": "wangminghua",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/WangMingHua111/less-theme-extract-plugin/issues"
+  },
+  "homepage": "https://github.com/WangMingHua111/less-theme-extract-plugin#readme"
+}
