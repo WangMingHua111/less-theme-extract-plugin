@@ -290,7 +290,7 @@ class LessThemeExtractPlugin {
                 if (compilation.mounted) return Promise.resolve(pluginArgs)
                 else {
                     pluginArgs.head.forEach(tag => {
-                        if (tag.tagName === 'link' && /stylesheet/i.test(tag.attributes.rel || '') && /theme\.(\w+)\./i.test(tag.attributes.href || '')) {
+                        if (tag.tagName === 'link' && (/stylesheet/i.test(tag.attributes.rel || '') || /prefetch/i.test(tag.attributes.rel || '')) && /theme\.(\w+)\./i.test(tag.attributes.href || '')) {
                             var m = tag.attributes.href.match(/theme\.(\w+)\./i)
                             if (!m) return
                             tag.attributes.disabled = m[1] !== theme
