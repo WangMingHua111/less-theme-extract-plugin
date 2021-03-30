@@ -11,10 +11,12 @@ var _webpackSources = _interopRequireDefault(require("webpack-sources"));
 
 var _CssDependency = _interopRequireDefault(require("./CssDependency"));
 
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 /* eslint-disable class-methods-use-this */
 const {
+    RawSource,
     ConcatSource,
     SourceMapSource,
     OriginalSource
@@ -32,6 +34,17 @@ const REGEXP_CONTENTHASH = /\[contenthash(?::(\d+))?\]/i;
 const REGEXP_NAME = /\[name\]/i;
 const REGEXP_PLACEHOLDERS = /\[(name|id|chunkhash)\]/g;
 const DEFAULT_FILENAME = '[name].css';
+const SWITCHER_FILENAME = 'js/theme-switcher.js';
+
+const readFile = (inputFileSystem, path) =>
+    new Promise((resolve, reject) => {
+        inputFileSystem.readFile(path, (err, stats) => {
+            if (err) {
+                reject(err);
+            }
+            resolve(stats);
+        });
+    });
 
 class CssDependencyTemplate {
     apply() { }
@@ -114,7 +127,7 @@ class LessThemeExtractPlugin {
         this.theme = theme
         this.lessOptions = Object.assign({}, lessOptions)
         this.options = Object.assign({
-            filename: `theme.${theme}.${DEFAULT_FILENAME}`,
+            filename: `css/theme.${theme}.${DEFAULT_FILENAME}`,
             moduleFilename: () => this.options.filename || DEFAULT_FILENAME,
             ignoreOrder: false
         }, options);
@@ -160,6 +173,7 @@ class LessThemeExtractPlugin {
                         hash: chunk.contentHash[MODULE_TYPE]
                     });
                 }
+                this.renderScriptAsset(compilation, compiler.inputFileSystem, require.resolve('./theme-switcher.js'), SWITCHER_FILENAME)
             });
             compilation.chunkTemplate.hooks.renderManifest.tap(pluginName, (result, {
                 chunk
@@ -296,6 +310,11 @@ class LessThemeExtractPlugin {
                             tag.attributes.disabled = m[1] !== theme
                             tag.attributes.theme = m[1]
                         }
+                    })
+                    pluginArgs.body.push({
+                        attributes: { type: 'text/javascript', src: SWITCHER_FILENAME },
+                        closeTag: true,
+                        tagName: 'script',
                     })
                     compilation.mounted = true
                     return Promise.resolve(pluginArgs)
@@ -461,8 +480,15 @@ class LessThemeExtractPlugin {
 
         return new ConcatSource(externalsSource, source);
     }
-    renderScriptAsset(compilation) {
 
+    renderScriptAsset(compilation, inputFileSystem, absoluteFilename, filename) {
+        try {
+            var funcStr = inputFileSystem.readFileSync(absoluteFilename).toString('utf8')
+            var source = new ConcatSource(funcStr)
+            compilation.assets[filename] = source
+        } catch (error) {
+
+        }
     }
 }
 LessThemeExtractPlugin.loader = require.resolve('./loader')
