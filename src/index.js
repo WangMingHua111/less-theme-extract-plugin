@@ -290,25 +290,23 @@ class LessThemeExtractPlugin {
         });
         compiler.hooks.compilation.tap(pluginName, compilation => {
 
-            compilation.hooks.htmlWebpackPluginAlterAssetTags && compilation.hooks.htmlWebpackPluginAlterAssetTags.tap('pluginName', pluginArgs => {
-                if (compilation.mounted) return Promise.resolve(pluginArgs)
-                else {
-                    pluginArgs.head.forEach(tag => {
-                        if (tag.tagName === 'link' && (/stylesheet/i.test(tag.attributes.rel || '') || /prefetch/i.test(tag.attributes.rel || '')) && /theme\.(\w+)\./i.test(tag.attributes.href || '')) {
-                            var m = tag.attributes.href.match(/theme\.(\w+)\./i)
-                            if (!m) return
-                            tag.attributes.disabled = m[1] !== theme
-                            tag.attributes.theme = m[1]
-                        }
-                    })
-                    pluginArgs.body.push({
-                        attributes: { type: 'text/javascript', src: this.options.jsfilename || SWITCHER_FILENAME },
-                        closeTag: true,
-                        tagName: 'script',
-                    })
-                    compilation.mounted = true
-                    return Promise.resolve(pluginArgs)
-                }
+            compilation.hooks.htmlWebpackPluginAlterAssetTags && compilation.hooks.htmlWebpackPluginAlterAssetTags.tap(pluginName, pluginArgs => {
+                pluginArgs.head.filter(p => !p.mounted).forEach(tag => {
+                    if (tag.tagName === 'link' && (/stylesheet/i.test(tag.attributes.rel || '') || /prefetch/i.test(tag.attributes.rel || '')) && /theme\.(\w+)\./i.test(tag.attributes.href || '')) {
+                        var m = tag.attributes.href.match(/theme\.(\w+)\./i)
+                        if (!m) return
+                        tag.attributes.disabled = m[1] !== theme
+                        tag.attributes.theme = m[1]
+                    }
+                    tag.mounted = true
+                })
+                !pluginArgs.body.some(p => p.mounted) && pluginArgs.body.push({
+                    attributes: { type: 'text/javascript', src: this.options.jsfilename || SWITCHER_FILENAME },
+                    closeTag: true,
+                    tagName: 'script',
+                    mounted: true
+                })
+                return pluginArgs
             })
         })
     }
@@ -491,11 +489,14 @@ class LessThemeExtractPluginGenerator {
                 chunkFilename: filename,
                 jsfilename
             }]
+            // return new LessThemeExtractPlugin(key, themes[key], {
+            //     filename,
+            //     chunkFilename: filename
+            // })
         })
     }
     chainWebpack(config) {
-        var development = process.env.NODE_ENV === 'development'
-        if (development || this.plugins.length === 0) return config
+        if (this.plugins.length === 0) return config
         config.module
             .rule('less')
             .test(/\.less$/)
