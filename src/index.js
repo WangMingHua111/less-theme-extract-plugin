@@ -16,7 +16,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 /* eslint-disable class-methods-use-this */
 const {
-    RawSource,
     ConcatSource,
     SourceMapSource,
     OriginalSource
@@ -33,18 +32,8 @@ const REGEXP_CHUNKHASH = /\[chunkhash(?::(\d+))?\]/i;
 const REGEXP_CONTENTHASH = /\[contenthash(?::(\d+))?\]/i;
 const REGEXP_NAME = /\[name\]/i;
 const REGEXP_PLACEHOLDERS = /\[(name|id|chunkhash)\]/g;
-const DEFAULT_FILENAME = '[name].css';
+// const DEFAULT_FILENAME = '[name].css';
 const SWITCHER_FILENAME = 'js/theme-switcher.js';
-
-const readFile = (inputFileSystem, path) =>
-    new Promise((resolve, reject) => {
-        inputFileSystem.readFile(path, (err, stats) => {
-            if (err) {
-                reject(err);
-            }
-            resolve(stats);
-        });
-    });
 
 class CssDependencyTemplate {
     apply() { }
@@ -124,11 +113,12 @@ class CssModuleFactory {
 
 class LessThemeExtractPlugin {
     constructor(theme = 'default', lessOptions = {}, options = {}) {
+        const filename = `[name].theme.${theme}.css`
         this.theme = theme
         this.lessOptions = Object.assign({}, lessOptions)
         this.options = Object.assign({
-            filename: `css/theme.${theme}.${DEFAULT_FILENAME}`,
-            moduleFilename: () => this.options.filename || DEFAULT_FILENAME,
+            filename,
+            moduleFilename: () => this.options.filename || filename,
             ignoreOrder: false
         }, options);
 
@@ -173,7 +163,7 @@ class LessThemeExtractPlugin {
                         hash: chunk.contentHash[MODULE_TYPE]
                     });
                 }
-                this.renderScriptAsset(compilation, compiler.inputFileSystem, require.resolve('./theme-switcher.js'), SWITCHER_FILENAME)
+                this.renderScriptAsset(compilation, compiler.inputFileSystem, require.resolve('./theme-switcher.js'), this.options.jsfilename || SWITCHER_FILENAME)
             });
             compilation.chunkTemplate.hooks.renderManifest.tap(pluginName, (result, {
                 chunk
@@ -312,7 +302,7 @@ class LessThemeExtractPlugin {
                         }
                     })
                     pluginArgs.body.push({
-                        attributes: { type: 'text/javascript', src: SWITCHER_FILENAME },
+                        attributes: { type: 'text/javascript', src: this.options.jsfilename || SWITCHER_FILENAME },
                         closeTag: true,
                         tagName: 'script',
                     })
@@ -491,5 +481,37 @@ class LessThemeExtractPlugin {
         }
     }
 }
+class LessThemeExtractPluginGenerator {
+    constructor(rootOptions, themes) {
+        this.plugins = Object.keys(themes || {}).map(key => {
+            const filename = this.getAssetPath(rootOptions, `css/[name].theme.${key}${rootOptions.filenameHashing ? '.[contenthash:8]' : ''}.css`)
+            const jsfilename = this.getAssetPath(rootOptions, SWITCHER_FILENAME)
+            return [key, themes[key], {
+                filename,
+                chunkFilename: filename,
+                jsfilename
+            }]
+        })
+    }
+    chainWebpack(config) {
+        var development = process.env.NODE_ENV === 'development'
+        if (development || this.plugins.length === 0) return config
+        config.module
+            .rule('less')
+            .test(/\.less$/)
+            .use('less-loader')
+            .loader(LessThemeExtractPlugin.loader)
+            .end()
+        this.plugins.forEach(args => config.plugin(`${pluginName} ${args[0]}`).use(LessThemeExtractPlugin, args))
+
+        return config
+    }
+    getAssetPath(options, filePath) {
+        return options.assetsDir
+            ? require('path').posix.join(options.assetsDir, filePath)
+            : filePath
+    }
+}
 LessThemeExtractPlugin.loader = require.resolve('./loader')
+LessThemeExtractPlugin.LessThemeExtractPluginGenerator = LessThemeExtractPluginGenerator
 module.exports = LessThemeExtractPlugin
