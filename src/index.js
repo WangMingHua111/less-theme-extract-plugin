@@ -297,6 +297,8 @@ class LessThemeExtractPlugin {
                         if (!m) return
                         tag.attributes.disabled = m[1] !== theme
                         tag.attributes.theme = m[1]
+                        // 强制将 rel="prefetch" 设置为 rel="stylesheet" 解决该样式未见未与Vue关联导致的不加载BUG
+                        tag.attributes.rel = 'stylesheet'
                     }
                     tag.mounted = true
                 })
