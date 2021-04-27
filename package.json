@@ -1,6 +1,6 @@
 {
   "name": "less-theme-extract-plugin",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "less theme extract",
   "main": "src/cjs.js",
   "files": [
