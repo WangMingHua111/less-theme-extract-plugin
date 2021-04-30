@@ -106,18 +106,20 @@
 
     const themes = require('./themes')
 
-    module.exports = {
+    const rootOptions = {
         chainWebpack: config => {
             new LessThemeExtractPluginGenerator(rootOptions, themes).chainWebpack(config)
         },
         css: {
             loaderOptions: {
             less: {
-                    lessOptions: themes.default,
-                }
+                lessOptions: themes.default,
             }
-        }
+            }
+        },
+        runtimeCompiler: true
     }
+    module.exports = rootOptions
 
 **获取主题示例**
 
