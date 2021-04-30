@@ -1,5 +1,21 @@
-
 ; (function (window) {
+    var prefixes = 'webkit moz ms o'.split(' '); //各浏览器前缀
+    var requestAnimationFrame = window.requestAnimationFrame
+    //通过遍历各浏览器前缀，来得到requestAnimationFrame在当前浏览器的实现形式
+    for (var i = 0; i < prefixes.length; i++) {
+        if (requestAnimationFrame) {
+            break;
+        }
+        prefix = prefixes[i];
+        requestAnimationFrame = requestAnimationFrame || window[prefix + 'RequestAnimationFrame'];
+    }
+    function SetLink(link, disabled) {
+        link.disabled = disabled
+        return new Promise((resolve) => {
+            if (requestAnimationFrame) requestAnimationFrame(() => resolve())
+            else resolve()
+        })
+    }
     function ThemeSwitcher() {
         // debugger// eslint-disable-line no-debugger
         this.development = typeof process !== 'undefined' && process.env.NODE_ENV === 'development'
@@ -7,11 +23,19 @@
         else this.initProductionThemes()
     }
     ThemeSwitcher.prototype = {
-        setTheme(theme) {
+        async setTheme(theme) {
             let themes = this.themes
-            Object.keys(themes).forEach(key => {
-                themes[key].forEach(tag => tag.disabled = key !== theme)
-            })
+            let enableLinks = []
+            let disableLinks = []
+            Object.keys(themes).filter(key => key === theme).forEach(key => themes[key].forEach(link => enableLinks.push(link)))
+            Object.keys(themes).filter(key => key !== theme).forEach(key => themes[key].forEach(link => !link.disabled && disableLinks.push(link)))
+
+            for (const i in enableLinks) {
+                await SetLink(enableLinks[i], false)
+            }
+            for (const i in disableLinks) {
+                await SetLink(disableLinks[i], true)
+            }
             this._theme = theme
         },
         getTheme() {
