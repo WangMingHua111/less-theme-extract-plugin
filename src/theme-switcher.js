@@ -37,6 +37,7 @@
                 await SetLink(disableLinks[i], true)
             }
             this._theme = theme
+            return Promise.resolve()
         },
         getTheme() {
             return this._theme
