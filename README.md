@@ -29,6 +29,10 @@
 
 抽取的主题将会在编译后自动注入到SPA页面中，并与生产模式下生效。
 
+[demo地址 index.html](https://wangminghua111.github.io/less-theme-extract-plugin-demo/dist/index.html)
+
+![](https://wangminghua111.github.io/less-theme-extract-plugin-demo/dist/CPT2104301413.gif)
+
 # 1.使用示例
 
 **themes.js 文件示例**
