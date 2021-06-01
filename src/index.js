@@ -302,8 +302,9 @@ class LessThemeExtractPlugin {
                     }
                     tag.mounted = true
                 })
+                var publicPath = compilation.outputOptions && compilation.outputOptions.publicPath
                 !pluginArgs.body.some(p => p.mounted) && pluginArgs.body.push({
-                    attributes: { type: 'text/javascript', src: this.options.jsfilename || SWITCHER_FILENAME },
+                    attributes: { type: 'text/javascript', src: `${publicPath}${this.options.jsfilename|| SWITCHER_FILENAME}` },
                     closeTag: true,
                     tagName: 'script',
                     mounted: true
